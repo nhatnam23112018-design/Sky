@@ -1,0 +1,121 @@
+-- Sky TextBox GUI (Neon menu + Rainbow Border + Draggable + Remove on Death)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Xóa GUI khi chết
+player.CharacterAdded:Connect(function()
+	if player:WaitForChild("PlayerGui"):FindFirstChild("SkyGui") then
+		player.PlayerGui.SkyGui:Destroy()
+	end
+end)
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SkyGui"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 250, 0, 120)
+Frame.Position = UDim2.new(0.35, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 255, 200) -- neon màu ocean
+Frame.BorderSizePixel = 0
+
+-- UICorner
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = Frame
+
+-- Rainbow Border
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Thickness = 3
+UIStroke.Parent = Frame
+
+-- Tạo hiệu ứng đổi màu cầu vồng
+task.spawn(function()
+	while UIStroke.Parent do
+		for i = 0, 1, 0.01 do
+			UIStroke.Color = Color3.fromHSV(i, 1, 1)
+			task.wait(0.05)
+		end
+	end
+end)
+
+-- Draggable
+local dragging, dragInput, dragStart, startPos
+Frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = Frame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+Frame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+-- TextBox
+local TextBox = Instance.new("TextBox")
+TextBox.Parent = Frame
+TextBox.Size = UDim2.new(0.8, 0, 0.3, 0)
+TextBox.Position = UDim2.new(0.1, 0, 0.2, 0)
+TextBox.Text = "135267311111950" -- default ID
+TextBox.TextScaled = true
+TextBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local BoxCorner = Instance.new("UICorner")
+BoxCorner.CornerRadius = UDim.new(0, 8)
+BoxCorner.Parent = TextBox
+
+-- Nút Apply
+local Button = Instance.new("TextButton")
+Button.Parent = Frame
+Button.Size = UDim2.new(0.6, 0, 0.25, 0)
+Button.Position = UDim2.new(0.2, 0, 0.65, 0)
+Button.Text = "Apply Sky"
+Button.TextScaled = true
+Button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 8)
+BtnCorner.Parent = Button
+
+-- Khi bấm Apply → đổi Skybox
+Button.MouseButton1Click:Connect(function()
+	local skyId = TextBox.Text
+	if not tonumber(skyId) then return end
+
+	-- Xoá skybox cũ
+	for _, v in pairs(game.Lighting:GetChildren()) do
+		if v:IsA("Sky") then
+			v:Destroy()
+		end
+	end
+
+	-- Tạo skybox mới
+	local sky = Instance.new("Sky")
+	sky.SkyboxBk = "rbxassetid://" .. skyId
+	sky.SkyboxDn = "rbxassetid://" .. skyId
+	sky.SkyboxFt = "rbxassetid://" .. skyId
+	sky.SkyboxLf = "rbxassetid://" .. skyId
+	sky.SkyboxRt = "rbxassetid://" .. skyId
+	sky.SkyboxUp = "rbxassetid://" .. skyId
+	sky.Parent = game.Lighting
+end)
