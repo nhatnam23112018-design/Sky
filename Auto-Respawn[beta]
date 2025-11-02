@@ -1,0 +1,20 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function autoRespawn()
+    local function onCharacterAdded(char)
+        local hum = char:WaitForChild("Humanoid")
+        hum.Died:Connect(function()
+            task.wait(0.1) -- delay nhỏ để game xử lý
+            player:LoadCharacter() -- respawn ngay
+        end)
+    end
+
+    if player.Character then
+        onCharacterAdded(player.Character)
+    end
+
+    player.CharacterAdded:Connect(onCharacterAdded)
+end
+
+autoRespawn()
